@@ -1,0 +1,34 @@
+---
+   - name: "Bootstraping | Groupe Node"
+     hosts: node
+     user: stagiaire
+     become: yes
+
+     tasks:
+       - name: "Vérification de la connectivité" 
+         ping: ~
+
+       - name: Création du groupe ansible
+         group:
+           name: ansible
+
+       - name: Création du compte ansible
+         user:
+           name: ansible
+           groups: [ 'sudo', 'ansible' ]
+           password: "{{ 'stage123' | password_hash('sha512') }}"
+           shell: /bin/bash
+           update_password: on_create
+
+       - name: Déploiement de la clef ssh
+         authorized_key:
+           user: ansible
+           key: "{{ lookup('file', 'ansible.pub') }}"
+
+       - name: modification du sudoers ansible
+         copy:
+           dest: '/etc/sudoers.d/ansible'
+           content: 'ansible ALL=(ALL:ALL) NOPASSWD: ALL'
+           owner: root
+           group: root
+           mode: 0600

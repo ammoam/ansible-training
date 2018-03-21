@@ -1,0 +1,6 @@
+node1 ansible_host=172.16.8.31
+#node2 ansible_host=172.16.8.32
+
+[node]
+node1
+#node2
