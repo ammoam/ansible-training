@@ -1,0 +1,18 @@
+---
+- block:
+    - block:
+        - name: install apache (Debian)
+          apt:
+            name: '{{ debian_values.pkgname }}'
+            state: present
+            update_cache: yes
+            cache_valid_time: 3600
+          when: ansible_os_family == 'Debian'
+    - block:
+        - name: install apache (redhat)
+          yum:
+            name: '{{ redhat_values.pkgname }}'
+            state: present
+            update_cache: yes
+          notify: '{{ redhat_values.service }}'
+          when: ansible_os_family == 'RedHat'

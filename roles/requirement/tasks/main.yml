@@ -1,0 +1,28 @@
+---
+# tasks file for requirement
+
+- name: "Update Debian" 
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+
+- name: "Vérification des principaux packages"
+  apt:
+    name:  '{{ item.key }}'
+    state: '{{ item.value.state  }}'
+  with_dict: '{{ packages }}'
+  when: ansible_os_family == 'Debian'
+
+- name: "update Debian"
+  yum:
+    name: '*'
+    update_cache: yes
+  when: ansible_os_family == 'RedHat'
+
+- name: "Vérification des principaux packages"
+  yum:
+    name:  '{{ item.key }}'
+    state: '{{ item.value.state  }}'
+  with_dict: '{{ packages }}'
+  when: ansible_os_family == 'RedHat'

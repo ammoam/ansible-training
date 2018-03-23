@@ -1,6 +1,6 @@
 ---
    - name: "Bootstraping | Groupe Node"
-     hosts: Debian 
+     hosts: RedHat 
      user: stagiaire
      become: yes
 
@@ -15,7 +15,7 @@
        - name: Création du compte ansible
          user:
            name: ansible
-           groups: [ 'sudo', 'ansible' ]
+           groups: [ 'ansible' ]
            password: "{{ 'stage123' | password_hash('sha512') }}"
            shell: /bin/bash
            update_password: on_create
@@ -23,7 +23,7 @@
        - name: Déploiement de la clef ssh
          authorized_key:
            user: ansible
-           key: "{{ lookup('file', 'ansible.pub') }}"
+           key: "{{ lookup('file', 'devops.pub') }}"
 
        - name: modification du sudoers ansible
          copy:

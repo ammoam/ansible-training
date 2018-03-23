@@ -1,0 +1,10 @@
+---
+# handlers file for bootstrap
+- name: reload ssh
+  service:
+    name: sshd
+    state: reloaded
+- name: restat ssh  
+  service:
+    name: ssh
+    state: restarted

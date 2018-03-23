@@ -1,0 +1,77 @@
+---
+# tasks file for bootstrap
+- fail:
+    msg: "Playbook failed"
+  when: environnement != 'production'
+       
+- set_fact:
+    sudo_group: 'sudo'
+  when: ansible_os_family == 'Debian'
+
+- set_fact:
+    sudo_group: 'wheel'
+  when: ansible_os_family == 'RedHat'
+
+- name: Création du groupe ansible
+  group:
+    name: '{{ item }}'
+  with_items: '{{ users }}'
+
+- name: Création du compte ansible
+  user:
+    name: '{{ item.key }}' 
+    groups: [ '{{ item.value.group  |  default([item.key]) }}' ]
+    #password: "{{ item.value.password }} | password_hash('sha512') }}"
+    password: "{{ lookup('password', env_path + '/credentials/' + inventory_hostname  + '/' + item.key + '.txt length=20') | password_hash('sha512')  }}"
+    shell: "{{ item.value.shell | default('/bin/bash') }}"
+    update_password: "{{ item.value.manage_password | default('on_create') }}"
+  with_dict: '{{ users }}'
+  when: item.value.sudo is undefined or item.value.sudo == false
+
+- name: Création du compte ansible
+  user:
+    name: '{{ item.key }}' 
+    groups: [ '{{ sudo_group  }}', '{{ item.value.group  |  default([item.key]) }}' ]
+    #password: "{{ item.value.password }} | password_hash('sha512') }}"
+    password: "{{ lookup('password', env_path + '/credentials/' + inventory_hostname  + '/' + item.key + '.txt length=20') | password_hash('sha512')  }}"
+    shell: "{{ item.value.shell | default('/bin/bash') }}"
+    update_password: "{{ item.value.manage_password | default('on_create') }}"
+  with_dict: '{{ users }}'
+  when:  item.value.sudo is defined and item.value.sudo == true
+
+- name: Déploiement de la clef ssh
+  authorized_key:
+    user: '{{ item }}'
+    key: "{{ lookup('file', 'devops.pub') }}"
+  with_items: '{{ users }}'
+
+- name: modification du sudoers ansible
+  copy:
+    dest: '/etc/sudoers.d/{{ item }}'
+    content: '{{ item }} ALL=(ALL:ALL) NOPASSWD: ALL'
+    owner: root
+    group: root
+    mode: 0600
+  with_items: '{{ users }}'
+
+- stat:
+    path: '{{ path_motd }}'
+  register: motd
+
+- debug:
+    var: motd.stat.exists
+    verbosity: 1
+
+- name: deploiement du template motd.j2
+  template: >
+    src=motd.j2 dest='{{ path_motd }}' mode=0600 owner=root group=root
+  #when: motd.stat.exists == false
+
+- name: 'Vérification fu fichier de configuration sshd_config'
+  lineinfile:
+    backup: yes
+    dest: '/etc/ssh/sshd_config'
+    regexp: '^#?PermitRootLogin .*'
+    line: 'PermitRootLogin without-password'
+  notify: 
+    - 'reload ssh'

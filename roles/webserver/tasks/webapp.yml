@@ -1,0 +1,17 @@
+---
+- name: "Deploiement du WebAPP (Debian)"
+  template:
+    src: index.html.j2
+    dest: '{{ debian_values.dest }}'
+    owner: '{{ debian_values.owner }}'
+    group: '{{ debian_values.group }}'
+    mode: '{{ debian_values.mode }}'
+  when: ansible_os_family == 'Debian'
+- name: "Deploiement u webAPP (RedHat)"
+  template:
+    src: index.html.j2
+    dest: '{{ redhat_values.dest }}'
+    owner: '{{ redhat_values.owner }}'
+    group: '{{ redhat_values.group }}'
+    mode: '{{ redhat_values.mode }}'
+  when: ansible_os_family == 'RedHat'

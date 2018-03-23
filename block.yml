@@ -1,0 +1,23 @@
+---
+   - name: déploiement serveur web
+     hosts: web
+     tasks:
+       - block:
+           - block:
+               - name: install (Debian)
+                 apt:
+                   name: apache2
+                   state: present
+                   update_cache: yes
+                   cache_valid_time: 3600
+                 when: ansible_os_family == 'Debian'
+               - name: install (Redhat)
+                 yum:
+                   name: httpd
+                   state: present
+                   update_cache: yes
+                 when: ansible_os_family == 'Redhat'
+           rescue:
+             - command:
+           always:
+             - shell

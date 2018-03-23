@@ -1,0 +1,19 @@
+<!--{{ansible_managed}}-->
+<!DOCTYPE html>
+
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Ansible is fantastic</title>
+</head>
+<body style="color : {{ color }}">
+  <p> Works on: {{ ansible_distribution }}
+  Version: {{ ansible_distribution_version }}
+  
+  <p>IP: {{ ansible_default_ipv4['address'] }}</p>
+  <ul>Network infos:
+  {% for key  in ansible_default_ipv4 %}
+    <li>{{ key }}: {{ ansible_default_ipv4[key] }}</li>
+  {% endfor %}
+  </ul>
+</body>

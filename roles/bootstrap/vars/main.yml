@@ -1,0 +1,19 @@
+---
+# vars file for bootstrap
+path_motd: '/etc/motd'
+env_path: "{{ lookup('env', 'PWD') }}"
+users: 
+  ansible:
+    group:  ansible
+    password: ansible123
+    shell: /bin/bash
+    manage_password: always
+    sudo: true
+salt:
+  group:  salt
+  password: salt123
+  shell: /bin/bash
+puppet:
+  group:  puppet
+  password: puppet123
+  shell: /bin/bash

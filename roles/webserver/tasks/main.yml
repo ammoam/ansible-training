@@ -1,0 +1,9 @@
+---
+# tasks file for webserver
+
+- include_tasks: install.yml
+  tags: ['install', 'web', 'apache']
+- include_tasks: webapp.yml
+  tags: 
+    - 'webapp' 
+    - 'apache'
