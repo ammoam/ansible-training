@@ -1,39 +1,88 @@
 ---
    - name: "Bootstraping | Groupe Node"
-     hosts: node
+     hosts: Debian 
      user: ansible 
      become: yes
+
+     vars:
+       path_motd: '/etc/motd'
+       env_path: "{{ lookup('env', 'PWD') }}"
+       users: 
+         ansible:
+           group: 
+             - sudo
+             - ansible
+           password: ansible123
+           shell: /bin/bash
+           manage_password: always
+         salt:
+           group: 
+              - sudo
+              - salt
+           password: salt123
+           shell: /bin/bash
+         puppet:
+           group:
+              - sudo
+              - puppet
+           password: puppet123
+           shell: /bin/bash
+
 
      tasks:
        - name: "Vérification de la connectivité" 
          ping: ~
 
-       - name: Création du groupe ansible
-         group:
-           name: ansible
+#       - name: Création du groupe ansible
+#         group:
+#           name: '{{ item }}'
+#         with_items: '{{ users }}'
 
        - name: Création du compte ansible
          user:
-           name: ansible
-           groups: [ 'sudo', 'ansible' ]
-           password: "{{ 'stage123' | password_hash('sha512') }}"
-           shell: /bin/bash
-           update_password: on_create
+           name: '{{ item.key }}' 
+           groups: [ '{{ item.value.group.0  }}', '{{ item.value.group.1  |  default([item.key]) }}' ]
+           #password: "{{ item.value.password }} | password_hash('sha512') }}"
+           password: "{{ lookup('password', env_path + '/credentials/' + inventory_hostname  + '/' + item.key + '.txt length=20') | password_hash('sha512')  }}"
+           shell: "{{ item.value.shell | default('/bin/bash') }}"
+           update_password: "{{ item.value.manage_password | default('on_create') }}"
+         with_dict: '{{ users }}'
 
        - name: Déploiement de la clef ssh
          authorized_key:
-           user: ansible
-           key: "{{ lookup('file', 'ansible.pub') }}"
+           user: '{{ item }}'
+           key: "{{ lookup('file', 'devops.pub') }}"
+         with_items: '{{ users }}'
 
        - name: modification du sudoers ansible
          copy:
-           dest: '/etc/sudoers.d/ansible'
-           content: 'ansible ALL=(ALL:ALL) NOPASSWD: ALL'
+           dest: '/etc/sudoers.d/{{ item }}'
+           content: '{{ item }} ALL=(ALL:ALL) NOPASSWD: ALL'
            owner: root
            group: root
            mode: 0600
-  
-       - name: "Vérification de la présence du package temux"
-         apt:
-           name: tmux
-           state: present
+         with_items: '{{ users }}'
+    
+       - stat:
+           path: '{{ path_motd }}'
+         register: motd
+
+       - debug:
+           var: motd.stat.exists
+           verbosity: 1
+   
+       - name: deploiement du template motd.j2
+         template: >
+           src=motd.j2 dest='{{ path_motd }}' mode=0600 owner=root group=root
+         #when: motd.stat.exists == false
+ 
+       - name: 'Vérification fu fichier de configuration sshd_config'
+         lineinfile:
+           backup: yes
+           dest: '/etc/ssh/sshd_config'
+           regexp: '^#?PermitRootLogin .*'
+           line: 'PermitRootLogin without-password'
+
+       - service:
+           name: sshd
+           state: reloaded

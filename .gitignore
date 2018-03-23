@@ -1,0 +1,6 @@
+credentials/
+devops
+devops.pub
+motd.j2
+requirement.retry
+site.retry

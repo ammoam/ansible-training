@@ -1,6 +1,6 @@
 ---
    - name: "Bootstraping | Groupe Node"
-     hosts: node
+     hosts: Debian 
      user: stagiaire
      become: yes
 

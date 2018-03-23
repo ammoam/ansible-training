@@ -1,0 +1,27 @@
+---
+   - name: requirements
+     hosts: Debian 
+     user: ansible
+     become: yes
+    
+     vars:
+       packages:
+         vim:
+           version: '2:7.4.1686-3ubuntu1'
+           state: present
+         nano:
+           state: absent
+         zsh:
+           state: present
+
+     tasks:
+       - name: update apt
+         apt:
+           update_cache: yes
+           cache_valid_time: 3600
+
+       - name: "Vérification des principaux packages"
+         apt:
+           name:  '{{ item.key }}'
+           state: '{{ item.value.state  }}'
+         with_dict: '{{ packages }}' 
